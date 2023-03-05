@@ -6,20 +6,23 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+    - name: Download artifact from build
+      uses: bettermarks/action-artifact-download@0.3.0
+      with:
+        repo: growtopiajaw/ubuntu-20_22-diff
+        token: ${{ secrets.GITHUB_TOKEN }}
+        artifact_name: patch.svf
+        rename: patch-downloaded.svf    
+        wait_seconds: 60
     - name: Set Up Dependencies
       run: |
-        sudo apt install aria2 wget unzip -y
-        aria2c -s 16 -x 16 "https://old-releases.ubuntu.com/releases/20.04.3/ubuntu-20.04.3-desktop-amd64.iso"
-        aria2c -s 16 -x 16 "https://releases.ubuntu.com/releases/jammy/ubuntu-22.04.2-desktop-amd64.iso"
-        wget "https://www.smartversion.com/smartvs400_linux_x64.zip"
-        unzip smartvs400_linux_x64.zip
-        chmod a+x smv
-        ./smv BuildPatch patch ubuntu-20.04.3-desktop-amd64.iso ubuntu-22.04.2-desktop-amd64.iso
+        sudo apt install zstd -y
+        zstd --ultra -22 -T0 --auto-threads=logical --progress -v patch-downloaded.svf -o patch.zstd
     - name: Upload Artifact
       uses: actions/upload-artifact@v3.1.2
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN }}
       with:
-        name: patch.svf
-        path: ${{ github.workspace }}/patch.svf
+        name: patch.zstd
+        path: ${{ github.workspace }}/patch.zstd
         retention-days: 90
