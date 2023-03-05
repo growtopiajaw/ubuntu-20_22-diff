@@ -1,0 +1,25 @@
+name: Create Release
+
+on: [workflow_dispatch]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set Up Dependencies
+      run: |
+        sudo apt install aria2 wget unzip -y
+        aria2c -s 16 -x 16 "https://old-releases.ubuntu.com/releases/20.04.3/ubuntu-20.04.3-desktop-amd64.iso"
+        aria2c -s 16 -x 16 "https://releases.ubuntu.com/releases/jammy/ubuntu-22.04.2-desktop-amd64.iso"
+        wget "https://www.smartversion.com/smartvs400_linux_x64.zip"
+        unzip smartvs400_linux_x64.zip
+        chmod a+x smv
+        ./smv BuildPatch patch ubuntu-20.04.3-desktop-amd64.iso ubuntu-22.04.2-desktop-amd64.iso
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3.1.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      with:
+        name: patch.svf
+        path: ${{ github.workspace }}/patch.svf
+        retention-days: 90
